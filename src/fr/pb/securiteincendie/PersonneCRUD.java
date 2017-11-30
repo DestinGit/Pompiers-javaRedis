@@ -8,6 +8,8 @@ import fr.pb.global.Globale;
 import java.util.*;
 import javax.swing.JFrame;
 import javax.swing.table.DefaultTableModel;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -18,14 +20,13 @@ public class PersonneCRUD extends javax.swing.JFrame {
 
     private Jedis jedis = Globale.getConnexionRedis();
     private DefaultTableModel idtm;
-
+    private List<Object[]> lPersonnesInit= new ArrayList();
     /**
      * Creates new form PersonneCRUD
      */
     public PersonneCRUD() {
         initComponents();
 
-      
         remplirTable();
         remplirJCombo();
 
@@ -42,13 +43,16 @@ public class PersonneCRUD extends javax.swing.JFrame {
         try {
 
             Object[] tLigne;
-
+            Map<String, String> mapPersonnesInit = jedis.hgetAll("Personnes");
             idtm = (DefaultTableModel) jTablePersonnes.getModel();
 
-            Map<String, String> mapPersonnes = jedis.hgetAll("Personnes");
+            for (int i = idtm.getRowCount() - 1; i >= 0; i--) {
+                idtm.removeRow(i);
+            }
+
             String cle;
             String valeur;
-            for (Map.Entry<String, String> entry : mapPersonnes.entrySet()) {
+            for (Map.Entry<String, String> entry : mapPersonnesInit.entrySet()) {
                 cle = entry.getKey(); // Pascal Buguet par exemple
                 valeur = entry.getValue(); // Opérateur par exemple
                 // Pascal Buguet, Opérateur
@@ -57,6 +61,7 @@ public class PersonneCRUD extends javax.swing.JFrame {
                 tLigne[1] = cle;
                 tLigne[2] = valeur;
                 idtm.addRow(tLigne);
+                lPersonnesInit.add(tLigne);
             }
 
             jLabelMessage.setText("Jusque là tout va bien !!!");
@@ -296,8 +301,10 @@ public class PersonneCRUD extends javax.swing.JFrame {
                 }
                 if (lsFlag.equals("v")) {
                     // Suppression puis Ajout
-                    // Il faut avoir gardé la valeur "primitive"
-                    //jedis.hmset("Personnels", lsPersonnel);
+                    jedis.hdel("Personnes",lPersonnesInit.get(i)[1].toString());
+                    jedis.hset("Personnes", lsPersonne, lsCategorie);
+                            // Il faut avoir gardé la valeur "primitive"
+                            //jedis.hmset("Personnels", lsPersonnel);
                     idtm.setValueAt("", i, 0);
                 }
             }
@@ -309,22 +316,11 @@ public class PersonneCRUD extends javax.swing.JFrame {
 
     private void jButtonRollbackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRollbackActionPerformed
         //
-        jLabelMessage.setText("");
-        int liRows = jTablePersonnes.getRowCount();
-        String lsFlag;
-        for (int i = liRows - 1; i >= 0; i--) {
-            lsFlag = jTablePersonnes.getValueAt(i, 0).toString();
-            if (lsFlag.equals("+")) {
-                idtm.removeRow(i);
-            }
-            if (lsFlag.equals("-")) {
-                //jTableCauses.setValueAt("", i, 0);
-                idtm.setValueAt("", i, 0);
-            }
-            if (lsFlag.equals("v")) {
-                idtm.setValueAt("", i, 0);
-            }
-        }
+        remplirTable();
+
+        jLabelMessage.setText("Retour Initial!");
+
+//     
     }//GEN-LAST:event_jButtonRollbackActionPerformed
 
     private void jTablePersonnesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTablePersonnesMouseClicked

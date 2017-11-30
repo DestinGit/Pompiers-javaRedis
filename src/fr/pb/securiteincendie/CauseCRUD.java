@@ -11,14 +11,14 @@ import redis.clients.jedis.Jedis;
 
 /**
  *
- * @author pascal
+ * @author jessica
  */
 public class CauseCRUD extends javax.swing.JFrame {
 
     private Jedis jedis;
     private DefaultTableModel idtm;
     // Pour le rollback; 
-    private String[][] t2DCauses;
+    // private String[][] t2DCauses;
 
     /**
      * Creates new form CauseCRUD
@@ -47,10 +47,12 @@ public class CauseCRUD extends javax.swing.JFrame {
             idtm = (DefaultTableModel) jTableCauses.getModel();
             // Liste les éléments du set
             Set<String> set = jedis.smembers("Causes");
+            // Boucle sur le set pour récupérer les valeurs
             for (String lsCause : set) {
                 tLigne = new Object[2];
                 tLigne[0] = "";
                 tLigne[1] = lsCause;
+                // Mise à jour jtable
                 idtm.addRow(tLigne);
             }
         } catch (Exception e) {
@@ -266,15 +268,17 @@ public class CauseCRUD extends javax.swing.JFrame {
                 }
                 // Test si le flag est égal à v
                 if (lsFlag.equals("v")) {
-                    // Test si la valeur existe déjà dans la base
-                    if () {
+                    boolean lbOK = jedis.sismember("Causes", lsCause);
+                    // Test si la valeur causes existe déjà dans la base
+                    if (lbOK) {
                         // Mise à jour jtable
+                        idtm.setValueAt("", i, 0);
                     } else {
-                        // Suppression le l'ancienne valeur dans la base
-                        
+                        // Suppression de l'ancienne valeur dans la base
+                        //jedis.srem("Causes", lsCause);
                         // Ajout de la nouvelle valeur dans la base
-                    }
-                    
+                        //jedis.sadd("Causes", lsCause);
+                    }                  
                     // Mise à jour jtable
                     idtm.setValueAt("", i, 0);
                 }
@@ -287,6 +291,37 @@ public class CauseCRUD extends javax.swing.JFrame {
 
     private void jButtonRollbackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRollbackActionPerformed
         // Annulation
+        try {
+            String lsFlag;
+            String lsCause;
+            // Récupération du nombre de lignes de la jtable
+            int liRow = jTableCauses.getRowCount();
+            // Boucle sur les lignes dans la jtable
+            for (int i = 1; i <= liRow - 1; i++) {
+                // Recupération de la valeur dans flag
+                lsFlag = jTableCauses.getValueAt(i, 0).toString();
+                // Recupération de la valeur dans cause
+                lsCause = jTableCauses.getValueAt(i, 1).toString();
+                // Test si le flag est égal à +
+                if (lsFlag.equals("+")) {
+                    // Suppression de la ligne dans la jtable
+                    idtm.removeRow(i);
+                }
+                // Test si le flag est égal à -
+                if (lsFlag.equals("-")) {
+                    // Mise à jour jtable
+                    idtm.setValueAt("", i, 0);
+                }
+                // Test si le flag est égal à v
+                if (lsFlag.equals("v")) {
+                    // Mise à jour jtable
+
+                }
+            }
+            jLabelMessage.setText("Mise à jour dans la base de données réussie");
+        } catch (Exception e) {
+            jLabelMessage.setText(e.getMessage());
+        }
     }//GEN-LAST:event_jButtonRollbackActionPerformed
 
     private void jTableCausesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableCausesMouseClicked

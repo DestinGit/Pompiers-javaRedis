@@ -62,8 +62,6 @@ public class LieuAjouter extends javax.swing.JFrame {
 
         jLabelMessage.setText("Message");
 
-        jTextFieldID.setText("24200");
-
         jTextFieldLieu.setText("Sarlat");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());

@@ -17,7 +17,7 @@ import redis.clients.jedis.Jedis;
  * @author pascal
  */
 public class LieuModifier extends javax.swing.JFrame {
-    
+
     private final Jedis jedis;
     private Map<String, String> mapInversee;
 
@@ -30,7 +30,7 @@ public class LieuModifier extends javax.swing.JFrame {
         // Connexion
         jedis = Globale.getConnexionRedis();
         remplirListe();
-        
+
         setTitle("Modifier un lieu");
         setLocationRelativeTo(null);
         setVisible(true);
@@ -40,28 +40,28 @@ public class LieuModifier extends javax.swing.JFrame {
      *
      */
     private void remplirListe() {
-        
+
         try {
             //Recuperation de l'id et du nom des lieux
             Map<String, String> mapLieux = jedis.hgetAll("Lieux");
-            
+
             String cle;
             String valeur;
-            
+
             //Inversion de id/lieu par lieu/id
             mapInversee = new TreeMap<>();
-            
+
             for (Map.Entry<String, String> entry : mapLieux.entrySet()) {
                 cle = entry.getKey();
                 valeur = entry.getValue();
                 mapInversee.put(valeur, cle);
                 jComboBoxLieux.addItem(valeur);
             }
-            
+
         } catch (Exception e) {
             jLabelMessage.setText(e.getMessage());
         }
-        
+
     } /// remplirListe
 
     /**
@@ -167,17 +167,21 @@ public class LieuModifier extends javax.swing.JFrame {
 
     private void jButtonModifierActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonModifierActionPerformed
         try {
-            Map<String, String> map = new HashMap<>();
-            map.put(jTextFieldIdLieu.getText(), jTextFieldNomLieu.getText());
-            jedis.hmset("Lieux", map);
-            jLabelMessage.setText("Modification reussie !!");
+            if (jTextFieldNomLieu.getText().equals("")) {
+                jLabelMessage.setText("Vous devez sélectionner un lieu !");
+            } else {
+                Map<String, String> map = new HashMap<>();
+                map.put(jTextFieldIdLieu.getText(), jTextFieldNomLieu.getText());
+                jedis.hmset("Lieux", map);
+                jLabelMessage.setText("Modification reussie !!");
+            }
         } catch (Exception e) {
             jLabelMessage.setText(e.getMessage());
         }
     }//GEN-LAST:event_jButtonModifierActionPerformed
 
     private void jButtonSelectionnerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSelectionnerActionPerformed
-        
+
         //Recuperation du nom du lieu à partir de la combo
         String nomLieu = jComboBoxLieux.getSelectedItem().toString();
         jTextFieldNomLieu.setText(nomLieu);
