@@ -19,7 +19,7 @@ public class CategorieCRUD extends javax.swing.JFrame {
     private DefaultTableModel idtm;
 //    Map<old, new>;
     private Map<String, String> mapNewCategorie;
-    private String[][] t2DCategorie;
+    //private String[][] t2DCategorie;
     private long llTaille;
 
     /**
@@ -43,6 +43,9 @@ public class CategorieCRUD extends javax.swing.JFrame {
     private void remplirTable() {
         try {
 
+            //Trier dans l'ordre
+            mapNewCategorie = new TreeMap();
+
             Object[] tLigne;
 
             idtm = (DefaultTableModel) jTableCategories.getModel();
@@ -52,19 +55,27 @@ public class CategorieCRUD extends javax.swing.JFrame {
              */
             // Nombre d'éléments
             llTaille = jedis.zcard("Categories");
-            t2DCategorie = new String[(int) llTaille][2];
+            //t2DCategorie = new String[(int) llTaille][2];
             // Récupération des éléments
             Set<String> set = jedis.zrange("Categories", 0, llTaille);
-            int i = 0;
-            for (String lsCategorie : set) {
+            String[] tCategories = set.toArray(new String[(int) llTaille]);
+
+            for (int i = 0; i < llTaille; i++) {
                 tLigne = new Object[2];
                 tLigne[0] = "";
-                tLigne[1] = lsCategorie;
+                tLigne[1] = tCategories[i];
+                mapNewCategorie.put(tCategories[i], "");
                 idtm.addRow(tLigne);
-                t2DCategorie[i][0] = lsCategorie;
-                t2DCategorie[i][1] = "";
-                mapNewCategorie.put(lsCategorie[i], "");
-                i++;
+//            int i = 0;
+//            for (String lsCategorie : set) {
+//                tLigne = new Object[2];
+//                tLigne[0] = "";
+//                tLigne[1] = lsCategorie;
+//                idtm.addRow(tLigne);
+//                t2DCategorie[i][0] = lsCategorie;
+//                t2DCategorie[i][1] = "";
+//                mapNewCategorie.put(lsCategorie[i], "");
+//                i++;
             }
 
             jLabelMessage.setText("Jusque là tout va bien !!!");
@@ -296,8 +307,37 @@ public class CategorieCRUD extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonCommitActionPerformed
 
     private void jButtonRollbackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRollbackActionPerformed
-        //
 
+        jLabelMessage.setText("");
+        int liRows = jTableCategories.getRowCount();
+        String lsFlag;
+        String lsNouvelleValeur;
+        String lsAncienneValeur;
+
+        for (int i = liRows - 1; i >= 0; i--) {
+            lsFlag = jTableCategories.getValueAt(i, 0).toString();
+            if (lsFlag.equals("+")) {
+                idtm.removeRow(i);
+            }
+            if (lsFlag.equals("-")) {
+                idtm.setValueAt("", i, 0);
+            }
+            if (lsFlag.equals("v")) {
+                lsNouvelleValeur = jTableCategories.getValueAt(i, 1).toString();
+                String cle = null;
+                String valeur;
+                for (Map.Entry<String, String> entry : mapNewCategorie.entrySet()) {
+                    cle = entry.getKey();
+                    valeur = entry.getValue();
+                    if (valeur.equals(lsNouvelleValeur)) {
+                        lsAncienneValeur = cle;
+                    }
+                }
+                lsAncienneValeur = cle;
+                idtm.setValueAt(lsAncienneValeur, i, 1);
+                idtm.setValueAt("", i, 0);
+            }
+        }
     }//GEN-LAST:event_jButtonRollbackActionPerformed
 
     private void jTableCategoriesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableCategoriesMouseClicked
@@ -313,7 +353,7 @@ public class CategorieCRUD extends javax.swing.JFrame {
             if (jTableCategories.getValueAt(liRow, 0).toString().equals("") || jTableCategories.getValueAt(liRow, 0).toString().equals("-")) {
                 jTableCategories.setValueAt("v", liRow, 0);
                 mapNewCategorie.replace(jTableCategories.getValueAt(liRow, 1).toString(), jTextFieldCategorie.getText());
-                t2DCategorie[liRow][1] = jTextFieldCategorie.getText();
+                //t2DCategorie[liRow][1] = jTextFieldCategorie.getText();
                 jTableCategories.setValueAt(jTextFieldCategorie.getText(), liRow, 1);
 
             }

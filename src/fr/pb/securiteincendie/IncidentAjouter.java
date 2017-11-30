@@ -7,7 +7,9 @@ package fr.pb.securiteincendie;
 
 import fr.pb.global.Globale;
 import java.util.*;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.table.DefaultTableModel;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -19,7 +21,7 @@ public class IncidentAjouter extends javax.swing.JFrame {
     private Jedis jedis;
     private Map<String, String> mapLieuxInverse;
     private Set<String> setCauses;
-    private Map<String, String> mapPersonnes;
+    private Map<String, String> mapPersonnesInverse;
 
     /**
      * Creates new form
@@ -39,7 +41,69 @@ public class IncidentAjouter extends javax.swing.JFrame {
      *
      */
     private void remplirListes() {
-       
+
+        /**
+         * Remplissage de la combobox lieux
+         */
+        try {
+            //Recuperation de l'id et du nom des lieux
+            Map<String, String> mapLieux = jedis.hgetAll("Lieux");
+
+            String cle;
+            String valeur;
+
+            //Inversion de id/lieu par lieu/id
+            mapLieuxInverse = new TreeMap<>();
+
+            for (Map.Entry<String, String> entry : mapLieux.entrySet()) {
+                cle = entry.getKey();
+                valeur = entry.getValue();
+                mapLieuxInverse.put(valeur, cle);
+
+                jComboBoxLieux.addItem(valeur);
+            }
+
+        } catch (Exception e) {
+            jLabelMessage.setText(e.getMessage());
+        }
+
+        /**
+         * Remplissage de la combobox causes
+         */
+        try {
+            // Liste les éléments du set
+            Set<String> setCauses = jedis.smembers("Causes");
+            for (String lsCause : setCauses) {
+                jComboBoxCauses.addItem(lsCause);
+            }
+        } catch (Exception e) {
+            jLabelMessage.setText(e.getMessage());
+        }
+
+        /**
+         * Remplissage de la combobox personnes
+         */
+        try {
+            //Recuperation de l'id et du nom des lieux
+            Map<String, String> mapLieux = jedis.hgetAll("Personnes");
+
+            String cle;
+            String valeur;
+
+            //Inversion de id/lieu par lieu/id
+            mapPersonnesInverse = new TreeMap<>();
+
+            for (Map.Entry<String, String> entry : mapLieux.entrySet()) {
+                cle = entry.getKey();
+                valeur = entry.getValue();
+                mapPersonnesInverse.put(valeur, cle);
+
+                jComboBoxPersonnes.addItem(valeur);
+            }
+
+        } catch (Exception e) {
+            jLabelMessage.setText(e.getMessage());
+        }
     } /// remplirListes
 
     /**
@@ -133,7 +197,7 @@ public class IncidentAjouter extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonAjouterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAjouterActionPerformed
-        
+
 
     }//GEN-LAST:event_jButtonAjouterActionPerformed
 
