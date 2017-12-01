@@ -7,9 +7,7 @@ package fr.pb.securiteincendie;
 
 import fr.pb.global.Globale;
 import java.util.*;
-import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.table.DefaultTableModel;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -18,7 +16,7 @@ import redis.clients.jedis.Jedis;
  */
 public class IncidentAjouter extends javax.swing.JFrame {
 
-    private Jedis jedis;
+    private final Jedis jedis;
     private Map<String, String> mapLieuxInverse;
     private Set<String> setCauses;
     private Map<String, String> mapPersonnesInverse;
@@ -198,7 +196,56 @@ public class IncidentAjouter extends javax.swing.JFrame {
 
     private void jButtonAjouterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAjouterActionPerformed
 
+        String lsIdLieu;
+        String lsNomLieu;
+        String lsCause;
+        String lsPersonne;
+        String lsDate;
 
+        Calendar calendrier = new GregorianCalendar();
+
+        String lsSecondes = Integer.toString(calendrier.get(Calendar.SECOND));
+        String lsMinutes = Integer.toString(calendrier.get(Calendar.MINUTE));
+        String lsHeures = Integer.toString(calendrier.get(Calendar.HOUR_OF_DAY));
+        String lsJour = Integer.toString(calendrier.get(Calendar.DAY_OF_MONTH));
+        String lsMois = Integer.toString(calendrier.get(Calendar.MONTH) + 1);
+        String lsAnnee = Integer.toString(calendrier.get(Calendar.YEAR));
+
+        lsNomLieu = jComboBoxLieux.getSelectedItem().toString();
+        lsCause = jComboBoxCauses.getSelectedItem().toString();
+        lsPersonne = jComboBoxPersonnes.getSelectedItem().toString();
+        lsIdLieu = mapLieuxInverse.get(lsNomLieu);
+
+        lsDate = lsJour + "/" + lsMois + "/" + lsAnnee + " " + lsHeures + ":" + lsMinutes + ":" + lsSecondes;
+
+        jLabelMessage.setText("A" + lsIdLieu + "causé par" + lsCause + "impliquant" + lsPersonne + " le " + lsDate);
+
+        //Recuperation des incidents
+        String lsIdIncident = jedis.get("IdIncident");
+        if (lsIdIncident == null) {
+            jedis.set("IdIncident", "0");
+        }
+
+        //Incrementation et recuperation des incidents
+        jedis.incr("IdIncident");
+        lsIdIncident = jedis.get("IdIncident");
+  
+        //Ajout des incidents dans la liste
+        String lsIncident = "Incident" + lsIdIncident;
+        jedis.rpush("IncidentsListe", lsIncident);
+
+        //Liste chainée triée dans l'ordre d'insertion - cf table IncidentLister
+        Map<String, String> mapIncidents = new LinkedHashMap();
+        mapIncidents.put("id", lsIdIncident);
+        mapIncidents.put("date", lsDate);
+        mapIncidents.put("lieu", lsNomLieu);
+        mapIncidents.put("cause", lsCause);
+        mapIncidents.put("personne", lsPersonne);
+        
+        //Ajout dans la base
+        jedis.hmset(lsIncident, mapIncidents);
+
+        
     }//GEN-LAST:event_jButtonAjouterActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing

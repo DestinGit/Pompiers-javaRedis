@@ -167,6 +167,7 @@ public class LieuModifier extends javax.swing.JFrame {
 
     private void jButtonModifierActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonModifierActionPerformed
         try {
+            //Verif si le champs est vide
             if (jTextFieldNomLieu.getText().equals("")) {
                 jLabelMessage.setText("Vous devez sélectionner un lieu !");
             } else {

@@ -15,10 +15,9 @@ import redis.clients.jedis.Jedis;
  */
 public class CauseCRUD extends javax.swing.JFrame {
 
-    private Jedis jedis;
+    private final Jedis jedis;
     private DefaultTableModel idtm;
-    // Pour le rollback; 
-    // private String[][] t2DCauses;
+    private final List<Object[]> lCausePrimitive = new ArrayList();
 
     /**
      * Creates new form CauseCRUD
@@ -54,6 +53,8 @@ public class CauseCRUD extends javax.swing.JFrame {
                 tLigne[1] = lsCause;
                 // Mise à jour jtable
                 idtm.addRow(tLigne);
+                // Stockage des valeurs initiales
+                lCausePrimitive.add(tLigne);
             }
         } catch (Exception e) {
             jLabelMessage.setText(e.getMessage());
@@ -247,7 +248,7 @@ public class CauseCRUD extends javax.swing.JFrame {
             // Récupération du nombre de lignes de la jtable
             int liRow = jTableCauses.getRowCount();
             // Boucle sur les lignes dans la jtable
-            for (int i = 1; i <= liRow - 1; i++) {
+            for (int i = liRow - 1; i >= 0; i--) {
                 // Recupération de la valeur dans flag
                 lsFlag = jTableCauses.getValueAt(i, 0).toString();
                 // Recupération de la valeur dans cause
@@ -268,17 +269,10 @@ public class CauseCRUD extends javax.swing.JFrame {
                 }
                 // Test si le flag est égal à v
                 if (lsFlag.equals("v")) {
-                    boolean lbOK = jedis.sismember("Causes", lsCause);
-                    // Test si la valeur causes existe déjà dans la base
-                    if (lbOK) {
-                        // Mise à jour jtable
-                        idtm.setValueAt("", i, 0);
-                    } else {
-                        // Suppression de l'ancienne valeur dans la base
-                        //jedis.srem("Causes", lsCause);
-                        // Ajout de la nouvelle valeur dans la base
-                        //jedis.sadd("Causes", lsCause);
-                    }                  
+                    // Suppression de l'ancienne valeur dans la base
+                    jedis.srem("Causes", lCausePrimitive.get(i)[1].toString());
+                    // Ajout de la nouvelle valeur dans la base
+                    jedis.sadd("Causes", lsCause);
                     // Mise à jour jtable
                     idtm.setValueAt("", i, 0);
                 }
@@ -291,36 +285,39 @@ public class CauseCRUD extends javax.swing.JFrame {
 
     private void jButtonRollbackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRollbackActionPerformed
         // Annulation
-        try {
-            String lsFlag;
-            String lsCause;
-            // Récupération du nombre de lignes de la jtable
-            int liRow = jTableCauses.getRowCount();
-            // Boucle sur les lignes dans la jtable
-            for (int i = 1; i <= liRow - 1; i++) {
-                // Recupération de la valeur dans flag
-                lsFlag = jTableCauses.getValueAt(i, 0).toString();
-                // Recupération de la valeur dans cause
-                lsCause = jTableCauses.getValueAt(i, 1).toString();
-                // Test si le flag est égal à +
-                if (lsFlag.equals("+")) {
-                    // Suppression de la ligne dans la jtable
-                    idtm.removeRow(i);
-                }
-                // Test si le flag est égal à -
-                if (lsFlag.equals("-")) {
-                    // Mise à jour jtable
-                    idtm.setValueAt("", i, 0);
-                }
-                // Test si le flag est égal à v
-                if (lsFlag.equals("v")) {
-                    // Mise à jour jtable
-
-                }
+        String lsFlag;
+        // Récupération du nombre de lignes de la jtable
+        int liRows = jTableCauses.getRowCount();
+        // Boucle sur les lignes dans la jtable
+        for (int i = liRows - 1; i >= 0; i--) {
+            // Recupération de la valeur dans flag
+            lsFlag = jTableCauses.getValueAt(i, 0).toString();
+            // Test si le flag est égal à +
+            if (lsFlag.equals("+")) {
+                // Suppression de la ligne dans la jtable
+                idtm.removeRow(i);
             }
-            jLabelMessage.setText("Mise à jour dans la base de données réussie");
-        } catch (Exception e) {
-            jLabelMessage.setText(e.getMessage());
+            // Test si le flag est égal à -
+            if (lsFlag.equals("-")) {
+                // Mise à jour jtable
+                idtm.setValueAt("", i, 0);
+            }
+            // Test si le flag est égal à v
+            if (lsFlag.equals("v")) {
+                // Boucle sur la liste des valeurs primitives
+                for (int j = 0; j < lCausePrimitive.size(); j++) {
+                    // Récupération dans un tableau de String
+                    String[] tLigne = (String[]) lCausePrimitive.get(j);
+                    // Test si la valeur primitive est égale à la nouvelle valeur
+                    if (tLigne[1].equals(jTableCauses.getValueAt(i, 1).toString())) {
+                        // Mise à jour jtable
+                        idtm.setValueAt(tLigne[0], i, 1);
+                    }
+                }
+                // Mise à jour jtable
+                idtm.setValueAt("", i, 0);
+            }
+            jLabelMessage.setText("Modifications annulées");
         }
     }//GEN-LAST:event_jButtonRollbackActionPerformed
 

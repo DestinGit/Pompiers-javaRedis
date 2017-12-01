@@ -60,7 +60,7 @@ public class LieuLister extends javax.swing.JFrame {
                 mapInversee.put(cle, valeur);
             }
 
-            //Definitiondu modele de la table
+            //Definition du modele de la table
             DefaultTableModel ldtm = (DefaultTableModel) jTableLieux.getModel();
             
             //Alimentation de la table par l'id et nom des lieux

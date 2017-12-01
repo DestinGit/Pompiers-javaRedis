@@ -15,7 +15,7 @@ import redis.clients.jedis.Jedis;
  */
 public class CategorieCRUD extends javax.swing.JFrame {
 
-    private Jedis jedis;
+    private final Jedis jedis;
     private DefaultTableModel idtm;
 //    Map<old, new>;
     private Map<String, String> mapNewCategorie;

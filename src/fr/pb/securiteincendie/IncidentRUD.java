@@ -15,7 +15,7 @@ import redis.clients.jedis.Jedis;
  */
 public class IncidentRUD extends javax.swing.JFrame {
 
-    private Jedis jedis;
+    private final Jedis jedis;
     private DefaultTableModel idtm;
     private Map<String, String> mapLieuxInverse;
     private Set<String> setCauses;
@@ -40,14 +40,76 @@ public class IncidentRUD extends javax.swing.JFrame {
      *
      */
     private void remplirTable() {
-       
+
+        try {
+            DefaultTableModel ldtm = (DefaultTableModel) jTableIncidents.getModel();
+
+            //Recuperation du nombre d'incidents car demandé comme arg pour lrange
+            long nbIncidents = jedis.llen("IncidentsListe");
+            //Recuperation de tout les incidents dans une liste
+            List<String> listeIncidents = jedis.lrange("IncidentsListe", 0, nbIncidents);
+
+            //On boucle sur la longueur de la liste
+            for (int i = 0; i < listeIncidents.size(); i++) {
+                //Recuperation de la liste dans une map
+                String incidents = listeIncidents.get(i);
+                Map<String, String> mapIncidents = jedis.hgetAll(incidents);
+                //Taille de la map et on recupere les champs pour les afficher dans la table
+                int lIncidents = mapIncidents.size();
+                //+1 pour le flag
+                String[] tChamps = new String[lIncidents+1];
+                tChamps[0] = "";// colonne flag
+                tChamps[1] = mapIncidents.get("date");
+                tChamps[2] = mapIncidents.get("lieu");
+                tChamps[3] = mapIncidents.get("cause");
+                tChamps[4] = mapIncidents.get("personne");
+                ldtm.addRow(tChamps);
+            }
+
+            jLabelMessage.setText("Chargement réussi !!");
+
+        } catch (Exception e) {
+            jLabelMessage.setText(e.getMessage());
+        }
+
     } /// remplirTable
 
     /**
      *
      */
     private void remplirListes() {
-        
+
+        try {
+            //Recuperation des lieux
+            Map<String, String> mapLieux = jedis.hgetAll("Lieux");
+            //Inversion de id/lieu par lieu/id
+            mapLieuxInverse = new TreeMap<>();
+            String cle;
+            String valeur;
+            for (Map.Entry<String, String> entry : mapLieux.entrySet()) {
+                cle = entry.getKey();
+                valeur = entry.getValue();
+                mapLieuxInverse.put(valeur, cle);
+                jComboBoxLieux.addItem(valeur);
+            }
+
+            //Recuperation des causes
+            setCauses = jedis.smembers("Causes");
+            for (String lsCause : setCauses) {
+                jComboBoxCauses.addItem(lsCause);
+            }
+
+            //Recuperation des personnes
+            mapPersonnes = jedis.hgetAll("Personnes");
+            Set<String> setNoms = mapPersonnes.keySet();
+            for (String nom : setNoms) {
+                jComboBoxPersonnes.addItem(nom);
+            }
+
+        } catch (Exception e) {
+            jLabelMessage.setText(e.getMessage());
+        }
+
     } /// remplirListes
 
     /**
@@ -208,15 +270,55 @@ public class IncidentRUD extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonSupprimerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSupprimerActionPerformed
-      
+        int liRow = jTableIncidents.getSelectedRow();
+        if (liRow < 0) {
+            jLabelMessage.setText("Vous devez sélectionner un incident !!");
+        } else {
+            jTableIncidents.setValueAt("-", liRow, 0);
+        }
     }//GEN-LAST:event_jButtonSupprimerActionPerformed
 
     private void jButtonModifierActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonModifierActionPerformed
-       
+        int liRow = jTableIncidents.getSelectedRow();
+        if (liRow >= 0) {
+            jTableIncidents.setValueAt("v", liRow, 0);
+            idtm.setValueAt(jTextFieldDateHeure, liRow, 1);
+            idtm.setValueAt(jComboBoxLieux.getSelectedItem().toString(), liRow, 2);
+            idtm.setValueAt(jComboBoxCauses.getSelectedItem().toString(), liRow, 3);
+            idtm.setValueAt(jComboBoxPersonnes.getSelectedItem().toString(), liRow, 4);
+        }
     }//GEN-LAST:event_jButtonModifierActionPerformed
 
     private void jButtonCommitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCommitActionPerformed
-       
+        String lsDateHeure;
+        String lsLieuCause;
+
+        // Récupération du nombre de lignes de la jtable
+        int liRows = jTableIncidents.getRowCount();
+        // Boucle sur les lignes dans la jtable
+        for (int i = liRows - 1; i >= 0; i--) {
+
+            //Si flag = -
+            if (jTableIncidents.getValueAt(i, 0).toString().equals("-")) {
+                //Suppresion
+                jedis.hdel("Incidents", jTableIncidents.getValueAt(i, 1).toString());
+                idtm.removeRow(i);
+            }
+
+            //Si flag =  v 
+            if (jTableIncidents.getValueAt(i, 0).toString().equals("v")) {
+                Map<String, String> map = new HashMap();
+                lsDateHeure = jTableIncidents.getValueAt(i, 1).toString();
+                lsLieuCause = jTableIncidents.getValueAt(i, 2).toString() + ":" + jTableIncidents.getValueAt(i, 3).toString();
+                map.put(lsDateHeure, lsLieuCause);
+
+                //Ajout des valeurs
+                jedis.hmset("Incidents", map);
+            }
+
+            jTableIncidents.setValueAt("", i, 0);
+
+        }
     }//GEN-LAST:event_jButtonCommitActionPerformed
 
     private void jButtonRollbackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRollbackActionPerformed

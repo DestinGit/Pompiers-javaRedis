@@ -14,30 +14,57 @@ import redis.clients.jedis.Jedis;
  * @author pascal
  */
 public class IncidentLister extends javax.swing.JFrame {
-
-    private Jedis jedis;
-    //private Map<String, String> mapLieuxInverse;
+    
+    private final Jedis jedis;
 
     /**
      * Creates new form IncidentLister
      */
     public IncidentLister() {
         initComponents();
-
+        
         jedis = Globale.getConnexionRedis();
         remplirTable();
-
+        
         setTitle("Les incidents");
         setLocationRelativeTo(null);
         setVisible(true);
-
+        
     } /// constructeur
 
     /**
      *
      */
     private void remplirTable() {
-       
+        try {
+            DefaultTableModel ldtm = (DefaultTableModel) jTableIncidents.getModel();
+
+            //Recuperation du nombre d'incidents car demandé comme arg pour lrange
+            long nbIncidents = jedis.llen("IncidentsListe");
+            //Recuperation de tout les incidents dans une liste
+            List<String> listeIncidents = jedis.lrange("IncidentsListe", 0, nbIncidents);
+
+            //On boucle sur la longueur de la liste
+            for (int i = 0; i < listeIncidents.size(); i++) {
+                //Recuperation de la liste dans une map
+                String incidents = listeIncidents.get(i);
+                Map<String, String> mapIncidents = jedis.hgetAll(incidents);
+                //Taille de la map et on recupere les champs pour les afficher dans la table
+                int lIncidents = mapIncidents.size();
+                String[] tChamps = new String[lIncidents];
+                tChamps[0] = mapIncidents.get("date");
+                tChamps[1] = mapIncidents.get("lieu");
+                tChamps[2] = mapIncidents.get("cause");
+                tChamps[3] = mapIncidents.get("personne");
+                ldtm.addRow(tChamps);
+            }
+            
+            jLabelMessage.setText("Chargement réussi !!");
+            
+        } catch (Exception e) {
+            jLabelMessage.setText(e.getMessage());
+        }
+        
     } /// remplirTable
 
     /**
