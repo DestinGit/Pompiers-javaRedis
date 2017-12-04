@@ -42,7 +42,7 @@ public class IncidentRUD extends javax.swing.JFrame {
     private void remplirTable() {
 
         try {
-            DefaultTableModel ldtm = (DefaultTableModel) jTableIncidents.getModel();
+            idtm = (DefaultTableModel) jTableIncidents.getModel();
 
             //Recuperation du nombre d'incidents car demandé comme arg pour lrange
             long nbIncidents = jedis.llen("IncidentsListe");
@@ -57,13 +57,14 @@ public class IncidentRUD extends javax.swing.JFrame {
                 //Taille de la map et on recupere les champs pour les afficher dans la table
                 int lIncidents = mapIncidents.size();
                 //+1 pour le flag
-                String[] tChamps = new String[lIncidents+1];
+                String[] tChamps = new String[lIncidents + 1];
                 tChamps[0] = "";// colonne flag
-                tChamps[1] = mapIncidents.get("date");
-                tChamps[2] = mapIncidents.get("lieu");
-                tChamps[3] = mapIncidents.get("cause");
-                tChamps[4] = mapIncidents.get("personne");
-                ldtm.addRow(tChamps);
+                tChamps[1] = mapIncidents.get("id");// id de l'incident
+                tChamps[2] = mapIncidents.get("date");
+                tChamps[3] = mapIncidents.get("lieu");
+                tChamps[4] = mapIncidents.get("cause");
+                tChamps[5] = mapIncidents.get("personne");
+                idtm.addRow(tChamps);
             }
 
             jLabelMessage.setText("Chargement réussi !!");
@@ -136,6 +137,8 @@ public class IncidentRUD extends javax.swing.JFrame {
         jButtonRollback = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         jComboBoxPersonnes = new javax.swing.JComboBox();
+        jLabel5 = new javax.swing.JLabel();
+        jLabelId = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -149,7 +152,7 @@ public class IncidentRUD extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Flag", "Date et heure", "Lieu", "Cause", "Personne"
+                "Flag", "Id", "Date et heure", "Lieu", "Cause", "Personne"
             }
         ));
         jTableIncidents.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -168,6 +171,11 @@ public class IncidentRUD extends javax.swing.JFrame {
         jLabel3.setText("Cause");
 
         jTextFieldDateHeure.setText("12/12/2016 08:08:08");
+        jTextFieldDateHeure.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldDateHeureActionPerformed(evt);
+            }
+        });
 
         jButtonSupprimer.setText("Supprimer");
         jButtonSupprimer.addActionListener(new java.awt.event.ActionListener() {
@@ -199,6 +207,10 @@ public class IncidentRUD extends javax.swing.JFrame {
 
         jLabel4.setText("Personne");
 
+        jLabel5.setText("Id");
+
+        jLabelId.setText("id");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -223,13 +235,16 @@ public class IncidentRUD extends javax.swing.JFrame {
                                     .addComponent(jLabel1)
                                     .addComponent(jLabel2)
                                     .addComponent(jLabel3)
-                                    .addComponent(jLabel4))
+                                    .addComponent(jLabel4)
+                                    .addComponent(jLabel5))
                                 .addGap(87, 87, 87)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jTextFieldDateHeure, javax.swing.GroupLayout.DEFAULT_SIZE, 202, Short.MAX_VALUE)
-                                    .addComponent(jComboBoxLieux, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jComboBoxCauses, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(jComboBoxPersonnes, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabelId)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(jTextFieldDateHeure, javax.swing.GroupLayout.DEFAULT_SIZE, 202, Short.MAX_VALUE)
+                                        .addComponent(jComboBoxLieux, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jComboBoxCauses, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jComboBoxPersonnes, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -240,7 +255,11 @@ public class IncidentRUD extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 275, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGap(32, 32, 32)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabelId))
+                        .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1)
                             .addComponent(jTextFieldDateHeure, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -261,7 +280,7 @@ public class IncidentRUD extends javax.swing.JFrame {
                     .addComponent(jButtonModifier)
                     .addComponent(jButtonCommit)
                     .addComponent(jButtonRollback))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 44, Short.MAX_VALUE)
                 .addComponent(jLabelMessage)
                 .addContainerGap())
         );
@@ -282,11 +301,16 @@ public class IncidentRUD extends javax.swing.JFrame {
         int liRow = jTableIncidents.getSelectedRow();
         if (liRow >= 0) {
             jTableIncidents.setValueAt("v", liRow, 0);
-            idtm.setValueAt(jTextFieldDateHeure, liRow, 1);
-            idtm.setValueAt(jComboBoxLieux.getSelectedItem().toString(), liRow, 2);
-            idtm.setValueAt(jComboBoxCauses.getSelectedItem().toString(), liRow, 3);
-            idtm.setValueAt(jComboBoxPersonnes.getSelectedItem().toString(), liRow, 4);
+            jTableIncidents.setValueAt(jLabelId.getText(), liRow, 1);
+            jTableIncidents.setValueAt(jTextFieldDateHeure.getText(), liRow, 2);
+            jTableIncidents.setValueAt(jComboBoxLieux.getSelectedItem().toString(), liRow, 3);
+            jTableIncidents.setValueAt(jComboBoxCauses.getSelectedItem().toString(), liRow, 4);
+            jTableIncidents.setValueAt(jComboBoxPersonnes.getSelectedItem().toString(), liRow, 5);
+            jLabelMessage.setText("modification pré-effectuée");
+        } else {
+            jLabelMessage.setText("aucune ligne sélectionnée");
         }
+
     }//GEN-LAST:event_jButtonModifierActionPerformed
 
     private void jButtonCommitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCommitActionPerformed
@@ -300,20 +324,23 @@ public class IncidentRUD extends javax.swing.JFrame {
 
             //Si flag = -
             if (jTableIncidents.getValueAt(i, 0).toString().equals("-")) {
-                //Suppresion
-                jedis.hdel("Incidents", jTableIncidents.getValueAt(i, 1).toString());
+                //Suppresion dans la liste des incidents , lrem (nomdelaliste, nombres de champs de la liste a supprimer, nom du champs
+                jedis.lrem("IncidentsListe", 1,"Incident" + jTableIncidents.getValueAt(i, 1).toString() );
+                System.out.println("je vais supprimer la ligne du modele");
                 idtm.removeRow(i);
             }
 
             //Si flag =  v 
             if (jTableIncidents.getValueAt(i, 0).toString().equals("v")) {
                 Map<String, String> map = new HashMap();
-                lsDateHeure = jTableIncidents.getValueAt(i, 1).toString();
-                lsLieuCause = jTableIncidents.getValueAt(i, 2).toString() + ":" + jTableIncidents.getValueAt(i, 3).toString();
-                map.put(lsDateHeure, lsLieuCause);
-
-                //Ajout des valeurs
-                jedis.hmset("Incidents", map);
+                //on remplit le map avec les valeurs de chaque cellules de la ligne en question sans le flag biensursout    
+                map.put("id", jTableIncidents.getValueAt(i, 1).toString());
+                map.put("date", jTableIncidents.getValueAt(i, 2).toString());
+                map.put("lieu", jTableIncidents.getValueAt(i, 3).toString());
+                map.put("cause", jTableIncidents.getValueAt(i, 4).toString());
+                map.put("personne", jTableIncidents.getValueAt(i, 5).toString());
+                // modif du map qui porte le nom incident+NumeroId auquel on affecte le nouveau map modifier
+                jedis.hmset("Incident" + jTableIncidents.getValueAt(i, 1).toString(), map);
             }
 
             jTableIncidents.setValueAt("", i, 0);
@@ -332,10 +359,11 @@ public class IncidentRUD extends javax.swing.JFrame {
     private void jTableIncidentsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableIncidentsMouseClicked
         //
         int liRow = jTableIncidents.getSelectedRow();
-        jTextFieldDateHeure.setText(jTableIncidents.getValueAt(liRow, 1).toString());
-        jComboBoxLieux.setSelectedItem(jTableIncidents.getValueAt(liRow, 2).toString());
-        jComboBoxCauses.setSelectedItem(jTableIncidents.getValueAt(liRow, 3).toString());
-        jComboBoxPersonnes.setSelectedItem(jTableIncidents.getValueAt(liRow, 4).toString());
+        jLabelId.setText(jTableIncidents.getValueAt(liRow, 1).toString());
+        jTextFieldDateHeure.setText(jTableIncidents.getValueAt(liRow, 2).toString());
+        jComboBoxLieux.setSelectedItem(jTableIncidents.getValueAt(liRow, 3).toString());
+        jComboBoxCauses.setSelectedItem(jTableIncidents.getValueAt(liRow, 4).toString());
+        jComboBoxPersonnes.setSelectedItem(jTableIncidents.getValueAt(liRow, 5).toString());
     }//GEN-LAST:event_jTableIncidentsMouseClicked
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
@@ -343,6 +371,10 @@ public class IncidentRUD extends javax.swing.JFrame {
         JFrame f = Globale.getFenetre();
         f.setVisible(true);
     }//GEN-LAST:event_formWindowClosing
+
+    private void jTextFieldDateHeureActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDateHeureActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jTextFieldDateHeureActionPerformed
 
     /**
      * @param args the command line arguments
@@ -391,6 +423,8 @@ public class IncidentRUD extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabelId;
     private javax.swing.JLabel jLabelMessage;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTableIncidents;

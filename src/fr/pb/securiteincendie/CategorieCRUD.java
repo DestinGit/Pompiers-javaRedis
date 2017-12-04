@@ -125,8 +125,6 @@ public class CategorieCRUD extends javax.swing.JFrame {
 
         jLabelMessage.setText("Message");
 
-        jTextFieldCategorie.setText("Assistant opérateur");
-
         jTableCategories.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -278,8 +276,7 @@ public class CategorieCRUD extends javax.swing.JFrame {
 
                 if (lsFlag.equals("+")) {
                     // Ajout à droite 
-                    jedis.zadd("Categories", llTaille, lsCategorie);
-                    System.out.println(llTaille);
+                    jedis.zadd("Categories", 1, lsCategorie);
                     idtm.setValueAt("", i, 0);
                 }
                 if (lsFlag.equals("-")) {
@@ -292,16 +289,22 @@ public class CategorieCRUD extends javax.swing.JFrame {
                  */
                 if (lsFlag.equals("v")) {
                     // Ancienne valeur (a revoir) 
-                    jedis.zrem("Categories", lsCategorie);
-                    System.out.println(jedis);
-                    System.out.println(Globale.getConnexionRedis());
+                    llTaille = jedis.zcard("Categories");
+                    Set<String> set = jedis.zrange("Categories", 0, llTaille);
+                    String[] tCategories = set.toArray(new String[(int) llTaille]);
+                    System.out.println(tCategories[i]);
+                    jedis.zrem("Categories", tCategories[i]);
+                    //idtm.removeRow(i);
                     // Nouvelle valeur 
-                    jedis.zadd("Categories", llTaille, lsCategorie);
+                    //lsCategorie = jTextFieldCategorie.getText();
+                    //System.out.println(lsCategorie);
+                    jedis.zadd("Categories", 1, lsCategorie);
                     idtm.setValueAt("", i, 0);
                 }
             }
             jLabelMessage.setText("Validation définitive OK");
         } catch (Exception e) {
+            
             jLabelMessage.setText(e.getMessage());
         }
     }//GEN-LAST:event_jButtonCommitActionPerformed

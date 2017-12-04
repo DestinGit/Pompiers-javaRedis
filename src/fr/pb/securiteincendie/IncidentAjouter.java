@@ -96,7 +96,7 @@ public class IncidentAjouter extends javax.swing.JFrame {
                 valeur = entry.getValue();
                 mapPersonnesInverse.put(valeur, cle);
 
-                jComboBoxPersonnes.addItem(valeur);
+                jComboBoxPersonnes.addItem(cle);
             }
 
         } catch (Exception e) {
@@ -216,9 +216,9 @@ public class IncidentAjouter extends javax.swing.JFrame {
         lsPersonne = jComboBoxPersonnes.getSelectedItem().toString();
         lsIdLieu = mapLieuxInverse.get(lsNomLieu);
 
-        lsDate = lsJour + "/" + lsMois + "/" + lsAnnee + " " + lsHeures + ":" + lsMinutes + ":" + lsSecondes;
+        lsDate = lsJour + "/" + lsMois + "/" + lsAnnee + " à " + lsHeures + ":" + lsMinutes + ":" + lsSecondes;
 
-        jLabelMessage.setText("A" + lsIdLieu + "causé par" + lsCause + "impliquant" + lsPersonne + " le " + lsDate);
+        jLabelMessage.setText("A " + lsIdLieu + " causé par " + lsCause + " impliquant " + lsPersonne + " le " + lsDate);
 
         //Recuperation des incidents
         String lsIdIncident = jedis.get("IdIncident");
@@ -232,6 +232,7 @@ public class IncidentAjouter extends javax.swing.JFrame {
   
         //Ajout des incidents dans la liste
         String lsIncident = "Incident" + lsIdIncident;
+        System.out.println(lsIncident);
         jedis.rpush("IncidentsListe", lsIncident);
 
         //Liste chainée triée dans l'ordre d'insertion - cf table IncidentLister
